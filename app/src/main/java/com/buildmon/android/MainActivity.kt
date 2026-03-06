@@ -263,7 +263,7 @@ fun StatChip(
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.Center
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
         ) {
             Text(
                 text = label,
