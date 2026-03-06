@@ -8,6 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 
 class BuildMonViewModel : ViewModel() {
 
@@ -16,15 +21,78 @@ class BuildMonViewModel : ViewModel() {
     val builds = MutableStateFlow<List<BuildJob>>(emptyList())
     val cpu    = MutableStateFlow(0f)
     val status = MutableStateFlow("Not connected")
-    val serverIp = MutableStateFlow("192.168.1.42")
+    val serverIp = MutableStateFlow("192.168.1.33") // Default/hint
+    val isScanning = MutableStateFlow(false)
 
-    fun connect() {
+    private val PREFS_NAME = "buildmon_prefs"
+    private val KEY_IP = "last_ip"
+
+    fun loadSettings(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedIp = prefs.getString(KEY_IP, null)
+        if (savedIp != null) {
+            serverIp.value = savedIp
+            connect() // Auto-connect if we have a saved IP
+        }
+        startDiscovery()
+    }
+
+    private fun saveIp(context: Context, ip: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_IP, ip).apply()
+    }
+
+    private fun startDiscovery() {
+        if (isScanning.value) return
+        viewModelScope.launch(Dispatchers.IO) {
+            isScanning.value = true
+            try {
+                val socket = DatagramSocket(8766)
+                socket.soTimeout = 5000
+                val buffer = ByteArray(1024)
+                val packet = DatagramPacket(buffer, buffer.size)
+
+                while (isScanning.value) {
+                    try {
+                        socket.receive(packet)
+                        val message = String(packet.data, 0, packet.length)
+                        if (message.startsWith("BUILDMON_DISCOVERY")) {
+                            val ip = if (message.contains(":")) {
+                                message.substringAfter(":")
+                            } else {
+                                packet.address.hostAddress
+                            }
+                            
+                            withContext(Dispatchers.Main) {
+                                if (status.value == "Not connected" || status.value.contains("Discovery")) {
+                                    serverIp.value = ip
+                                    status.value = "Discovery: Found PC at $ip"
+                                    // Optionally auto-connect here if desired
+                                    // connect() 
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Timeout or other error, just continue
+                    }
+                }
+                socket.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isScanning.value = false
+            }
+        }
+    }
+    fun connect(context: Context? = null) {
         client?.disconnect()
         val currentIp = serverIp.value.trim()
         if (currentIp.isEmpty()) {
             status.value = "Enter IP first"
             return
         }
+        
+        context?.let { saveIp(it, currentIp) }
         
         val newClient = BuildMonClient(currentIp)
         client = newClient

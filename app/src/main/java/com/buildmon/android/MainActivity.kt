@@ -39,11 +39,13 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
     val cpu by vm.cpu.collectAsState()
     val status by vm.status.collectAsState()
     val ip by vm.serverIp.collectAsState()
+    val isScanning by vm.isScanning.collectAsState()
     val context = LocalContext.current
 
-    // Initialize notifications once
+    // Initialize notifications and settings once
     LaunchedEffect(Unit) {
         vm.setupNotifications(context)
+        vm.loadSettings(context)
     }
 
     Scaffold(
@@ -67,8 +69,9 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
             ConnectionCard(
                 ip = ip,
                 status = status,
+                isScanning = isScanning,
                 onIpChange = { vm.serverIp.value = it },
-                onConnect = { vm.connect() }
+                onConnect = { vm.connect(context) }
             )
 
             Spacer(Modifier.height(24.dp))
@@ -204,6 +207,7 @@ fun BuildCard(job: BuildJob) {
 fun ConnectionCard(
     ip: String,
     status: String,
+    isScanning: Boolean,
     onIpChange: (String) -> Unit,
     onConnect: () -> Unit
 ) {
@@ -238,12 +242,24 @@ fun ConnectionCard(
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = status,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (status.contains("Connected")) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
-                fontWeight = FontWeight.Medium
-            )
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (status.contains("Connected")) MaterialTheme.colorScheme.tertiary else if (status.contains("Discovery")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+                if (isScanning && !status.contains("Connected")) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Scanning...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+            }
         }
     }
 }
