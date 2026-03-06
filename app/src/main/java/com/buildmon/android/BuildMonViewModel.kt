@@ -32,9 +32,9 @@ class BuildMonViewModel : ViewModel() {
         val savedIp = prefs.getString(KEY_IP, null)
         if (savedIp != null) {
             serverIp.value = savedIp
-            connect() // Auto-connect if we have a saved IP
+            connect(context) // Auto-connect if we have a saved IP
         }
-        startDiscovery()
+        startDiscovery(context)
     }
 
     private fun saveIp(context: Context, ip: String) {
@@ -42,10 +42,18 @@ class BuildMonViewModel : ViewModel() {
         prefs.edit().putString(KEY_IP, ip).apply()
     }
 
-    private fun startDiscovery() {
+    private fun startDiscovery(context: Context) {
         if (isScanning.value) return
         viewModelScope.launch(Dispatchers.IO) {
             isScanning.value = true
+            
+            // Acquire MulticastLock for some devices to receive UDP broadcasts
+            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+            val lock = wifiManager.createMulticastLock("buildmon_discovery_lock").apply {
+                setReferenceCounted(true)
+                acquire()
+            }
+
             try {
                 val socket = DatagramSocket(8766)
                 socket.soTimeout = 5000
@@ -56,7 +64,7 @@ class BuildMonViewModel : ViewModel() {
                     try {
                         socket.receive(packet)
                         val message = String(packet.data, 0, packet.length)
-                        if (message.startsWith("BUILDMON_DISCOVERY")) {
+                        if (message.startsWith("BUILDM-ON_DISCOVERY")) {
                             val ip = if (message.contains(":")) {
                                 message.substringAfter(":")
                             } else {
@@ -67,8 +75,7 @@ class BuildMonViewModel : ViewModel() {
                                 if (status.value == "Not connected" || status.value.contains("Discovery")) {
                                     serverIp.value = ip
                                     status.value = "Discovery: Found PC at $ip"
-                                    // Optionally auto-connect here if desired
-                                    // connect() 
+                                    // Optional: Connect immediately if manually entry is empty
                                 }
                             }
                         }
@@ -80,6 +87,7 @@ class BuildMonViewModel : ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
+                if (lock.isHeld) lock.release()
                 isScanning.value = false
             }
         }

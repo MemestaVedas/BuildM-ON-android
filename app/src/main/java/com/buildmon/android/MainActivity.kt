@@ -3,6 +3,7 @@ package com.buildmon.android
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             // Using default Material 3 dynamic/dark theme approach
@@ -48,21 +50,13 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
         vm.loadSettings(context)
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("BuildM-ON", fontWeight = FontWeight.ExtraBold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { _ ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
+                .statusBarsPadding()
+                .padding(top = 24.dp) // Extra "good amount of padding" for the notch
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
                 .fillMaxSize()
         ) {
             // Connection card
