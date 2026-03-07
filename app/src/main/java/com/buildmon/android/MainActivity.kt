@@ -7,10 +7,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,15 +56,34 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
         vm.loadSettings(context)
     }
 
-    Scaffold { _ ->
+    Scaffold(
+        topBar = {
+            LargeTopAppBar(
+                title = { 
+                    Column {
+                        Text("BuildM-ON", fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            "Status: $status", 
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (status.contains("Connected")) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                )
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
-                .statusBarsPadding()
-                .padding(top = 24.dp) // Extra "good amount of padding" for the notch
+                .padding(padding)
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.height(8.dp))
             // Connection card
             ConnectionCard(
                 ip = ip,
@@ -127,10 +152,7 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
 @Composable
 fun BuildCard(job: BuildJob) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -143,52 +165,42 @@ fun BuildCard(job: BuildJob) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Text(
-                        text = job.tool,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
+                AssistChip(
+                    onClick = { },
+                    label = { Text(job.tool) },
+                    leadingIcon = { Icon(Icons.Default.Build, "Tool", Modifier.size(AssistChipDefaults.IconSize)) }
+                )
             }
 
             Spacer(Modifier.height(4.dp))
             Text(
                 text = job.status,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
             )
+
+            if (job.status == "building") {
+                Spacer(Modifier.height(12.dp))
+                LinearProgressIndicator(
+                    progress = job.progress,
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
-
-            // Progress bar
-            LinearProgressIndicator(
-                progress = job.progress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp),
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
-                color = if (job.progress > 0.9f) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surface
-            )
-
-            Spacer(Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "${(job.progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold
+                    text = if (job.status == "building") "${(job.progress * 100).toInt()}%" else "ID: ${job.pid}",
+                    style = MaterialTheme.typography.labelSmall
                 )
                 Text(
                     text = "${job.duration_seconds}s",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
             }

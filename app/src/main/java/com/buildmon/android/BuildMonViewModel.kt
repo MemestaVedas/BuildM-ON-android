@@ -93,7 +93,7 @@ class BuildMonViewModel : ViewModel() {
         }
     }
     fun connect(context: Context? = null) {
-        client?.disconnect()
+        client?.stop()
         val currentIp = serverIp.value.trim()
         if (currentIp.isEmpty()) {
             status.value = "Enter IP first"
@@ -102,7 +102,7 @@ class BuildMonViewModel : ViewModel() {
         
         context?.let { saveIp(it, currentIp) }
         
-        val newClient = BuildMonClient(currentIp)
+        val newClient = BuildMonClient(currentIp, viewModelScope)
         client = newClient
 
         viewModelScope.launch {
@@ -115,7 +115,7 @@ class BuildMonViewModel : ViewModel() {
             newClient.status.collect { status.value = it }
         }
 
-        newClient.connect()
+        newClient.start()
     }
 
     fun setupNotifications(context: Context) {
@@ -165,12 +165,12 @@ class BuildMonViewModel : ViewModel() {
     }
 
     fun disconnect() {
-        client?.disconnect()
+        client?.stop()
         status.value = "Disconnected"
     }
 
     override fun onCleared() {
         super.onCleared()
-        client?.disconnect()
+        client?.stop()
     }
 }
