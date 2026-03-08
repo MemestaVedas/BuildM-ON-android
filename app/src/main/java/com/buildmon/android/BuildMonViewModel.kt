@@ -55,7 +55,7 @@ class BuildMonViewModel : ViewModel() {
             }
 
             try {
-                val socket = DatagramSocket(8766)
+                val socket = DatagramSocket(7713)
                 socket.soTimeout = 5000
                 val buffer = ByteArray(1024)
                 val packet = DatagramPacket(buffer, buffer.size)

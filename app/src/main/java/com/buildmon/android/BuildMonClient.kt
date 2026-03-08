@@ -48,7 +48,7 @@ class BuildMonClient(private val serverIp: String, private val scope: CoroutineS
 
     private fun connectOnce() {
         val request = Request.Builder()
-            .url("ws://$serverIp:8765/ws")
+            .url("ws://$serverIp:7712/ws")
             .build()
 
         socket = client.newWebSocket(request, object : WebSocketListener() {
