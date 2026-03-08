@@ -1,4 +1,4 @@
-package com.buildmon.android
+package com.gobuild.android
 
 import okhttp3.*
 import kotlinx.coroutines.*
@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-class BuildMonClient(private val serverIp: String, private val scope: CoroutineScope) {
+class GoBuildClient(private val serverIp: String, private val scope: CoroutineScope) {
 
     private val client = OkHttpClient()
     private val json = Json { ignoreUnknownKeys = true }

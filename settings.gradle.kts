@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "BuildM-ON-android"
+rootProject.name = "gobuild-android"
 include(":app")

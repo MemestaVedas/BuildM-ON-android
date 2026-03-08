@@ -1,4 +1,4 @@
-package com.buildmon.android
+package com.gobuild.android
 
 import kotlinx.serialization.Serializable
 

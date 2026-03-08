@@ -1,4 +1,4 @@
-package com.buildmon.android
+package com.gobuild.android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BuildMonApp()
+                    GoBuildApp()
                 }
             }
         }
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
+fun GoBuildApp(vm: GoBuildViewModel = viewModel()) {
     val builds by vm.builds.collectAsState()
     val cpu by vm.cpu.collectAsState()
     val status by vm.status.collectAsState()
@@ -61,7 +61,7 @@ fun BuildMonApp(vm: BuildMonViewModel = viewModel()) {
             LargeTopAppBar(
                 title = { 
                     Column {
-                        Text("BuildM-ON", fontWeight = FontWeight.ExtraBold)
+                        Text("GoBuild", fontWeight = FontWeight.ExtraBold)
                         Text(
                             "Status: $status", 
                             style = MaterialTheme.typography.labelSmall,

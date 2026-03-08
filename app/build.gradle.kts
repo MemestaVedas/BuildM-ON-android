@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.buildmon.android"
+    namespace = "com.gobuild.android"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.buildmon.android"
+        applicationId = "com.gobuild.android"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

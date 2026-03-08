@@ -1,4 +1,4 @@
-package com.buildmon.android
+package com.gobuild.android
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -14,9 +14,9 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 
-class BuildMonViewModel : ViewModel() {
+class GoBuildViewModel : ViewModel() {
 
-    private var client: BuildMonClient? = null
+    private var client: GoBuildClient? = null
 
     val builds = MutableStateFlow<List<BuildJob>>(emptyList())
     val cpu    = MutableStateFlow(0f)
@@ -24,7 +24,7 @@ class BuildMonViewModel : ViewModel() {
     val serverIp = MutableStateFlow("192.168.1.33") // Default/hint
     val isScanning = MutableStateFlow(false)
 
-    private val PREFS_NAME = "buildmon_prefs"
+    private val PREFS_NAME = "gobuild_prefs"
     private val KEY_IP = "last_ip"
 
     fun loadSettings(context: Context) {
@@ -49,7 +49,7 @@ class BuildMonViewModel : ViewModel() {
             
             // Acquire MulticastLock for some devices to receive UDP broadcasts
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
-            val lock = wifiManager.createMulticastLock("buildmon_discovery_lock").apply {
+            val lock = wifiManager.createMulticastLock("gobuild_discovery_lock").apply {
                 setReferenceCounted(true)
                 acquire()
             }
@@ -64,7 +64,7 @@ class BuildMonViewModel : ViewModel() {
                     try {
                         socket.receive(packet)
                         val message = String(packet.data, 0, packet.length)
-                        if (message.startsWith("BUILDM-ON_DISCOVERY")) {
+                        if (message.startsWith("GOBUILD_DISCOVERY")) {
                             val ip = if (message.contains(":")) {
                                 message.substringAfter(":")
                             } else {
@@ -103,7 +103,7 @@ class BuildMonViewModel : ViewModel() {
         
         context?.let { saveIp(it, currentIp) }
         
-        val newClient = BuildMonClient(currentIp, viewModelScope)
+        val newClient = GoBuildClient(currentIp, viewModelScope)
         client = newClient
 
         viewModelScope.launch {
@@ -120,7 +120,7 @@ class BuildMonViewModel : ViewModel() {
     }
 
     fun setupNotifications(context: Context) {
-        val channelId = "buildmon_events"
+        val channelId = "gobuild_events"
         val channel = NotificationChannel(
             channelId,
             "Build Events",
