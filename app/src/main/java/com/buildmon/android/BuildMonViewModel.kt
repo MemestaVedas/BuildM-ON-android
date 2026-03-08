@@ -72,10 +72,11 @@ class BuildMonViewModel : ViewModel() {
                             }
                             
                             withContext(Dispatchers.Main) {
-                                if (status.value == "Not connected" || status.value.contains("Discovery")) {
+                                if (status.value != "Connected") {
                                     serverIp.value = ip
                                     status.value = "Discovery: Found PC at $ip"
-                                    // Optional: Connect immediately if manually entry is empty
+                                    // Proactively connect to the discovered terminal
+                                    connect(context)
                                 }
                             }
                         }
