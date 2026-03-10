@@ -183,7 +183,7 @@ fun BuildCard(job: BuildJob) {
             if (job.status == "building") {
                 Spacer(Modifier.height(12.dp))
                 LinearProgressIndicator(
-                    progress = job.progress,
+                    progress = job.progress.coerceIn(0f, 1f),
                     modifier = Modifier.fillMaxWidth().height(8.dp),
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
                 )

@@ -116,6 +116,20 @@ class GoBuildViewModel : ViewModel() {
             newClient.status.collect { status.value = it }
         }
 
+        viewModelScope.launch {
+            newClient.events.collect { update ->
+                context?.let { ctx ->
+                    val title = if (update.type == "finished") "✅ Build Finished" else "❌ Build Failed"
+                    val body = if (update.type == "finished") {
+                        "${update.project} completed in ${update.duration_seconds}s"
+                    } else {
+                        "${update.project} failed: ${update.error_line}"
+                    }
+                    showNotification(ctx, "gobuild_events", title, body)
+                }
+            }
+        }
+
         newClient.start()
     }
 
@@ -131,24 +145,6 @@ class GoBuildViewModel : ViewModel() {
         
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-
-        viewModelScope.launch {
-            // Wait for client to be initialized
-            while (client == null) {
-                kotlinx.coroutines.delay(500)
-            }
-            
-            client?.events?.collect { update ->
-                val title = if (update.type == "finished") "✅ Build Finished" else "❌ Build Failed"
-                val body = if (update.type == "finished") {
-                    "${update.project} completed in ${update.duration_seconds}s"
-                } else {
-                    "${update.project} failed: ${update.error_line}"
-                }
-                
-                showNotification(context, channelId, title, body)
-            }
-        }
     }
 
     private fun showNotification(context: Context, channelId: String, title: String, body: String) {
